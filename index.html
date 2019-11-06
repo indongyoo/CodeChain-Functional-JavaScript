@@ -17,34 +17,13 @@
  - 한 번의 then을 통해 중첩된 Promise를 모두 푼다.
 <script>
 const a = new Promise(resolve => resolve(new Promise(resolve => resolve(10))));
-// a.then(log);
+a.then(log);
 </script>
 
 ## 순회 가능한 값
  - 이터러블
  - 이터레이터
  - 이터러블/이터레이터/제너레이터 프로토콜
-<script>
- // const arr = [1, 2, 3];
- // arr[Symbol.iterator] = null;
- // for (const a of arr) log(a);
- // const iter = arr[Symbol.iterator]();
- // log(iter.next());
- // log([...iter, ...arr, 10, 20]);
- // log(iter.next());
- // log(iter.next());
- // function* gen() {
- //   yield 10;
- //   if (false) yield 20;
- //   yield 30;
- // }
- // const iter = gen();
- // log([...iter]);
- // log(iter.next());
- // log(iter.next());
- // log(iter.next());
- // log(iter.next());
-</script>
 
 ## 값에 대해 정리
  - a (JSON, Web Apis, Node.js)
@@ -73,16 +52,16 @@ const users = [
   { name: 'CC', age: 23 }
 ];
 
-// go(
-//   users,
-//   L.filter(u => u.age > 20),
-//   take(1),
-//   each(log));
-//
-// // log(lazy.next());
-// // log(lazy.next());
-// // log(lazy.next());
-// // log(lazy.next());
+go(
+  users,
+  L.filter(u => u.age > 20),
+  take(1),
+  each(log));
+
+// log(lazy.next());
+// log(lazy.next());
+// log(lazy.next());
+// log(lazy.next());
 
 // log(users.find(u => u.name == 'DD').age);
 </script>
@@ -107,7 +86,7 @@ const datas = {
   ]
 };
 
-// log(sel(['products', {id: 6},'name'], datas));
+log(sel(['products', {id: 3}, 'name'], datas));
 </script>
 
 ### compact, reject(a => a === undefined) 활용
@@ -123,19 +102,19 @@ const data = [
   { a: { b: null } },
 ];
 
-// go(data,
-//  map(sel('a.b')),
-//  each(log));
+go(data,
+  map(sel('a.b')),
+  each(log));
 
-// go(data,
-//  map(sel('a.b')),
-//  compact,
-//  each(log));
-//
-// go(data,
-//  map(sel('a.b')),
-//  reject(a => a === undefined),
-//  each(log));
+go(data,
+  map(sel('a.b')),
+  compact,
+  each(log));
+
+go(data,
+  map(sel('a.b')),
+  reject(a => a === undefined),
+  each(log));
 </script>
 
 ### try/catch + async/await + Promise
@@ -181,21 +160,20 @@ const pages = [
 const getPage = num => new Promise(resolve =>
   setTimeout(_ => resolve(pages[num]), 2000));
 
-// async function f1() {
-//    await go(
-//      range(3),
-//      L.map(getPage),
-//      L.map(str => str.split(' ')),
-//      C.takeAll(1),
-//      each(log));
-// }
+async function f1() {
+   await go(
+     range(3),
+     L.map(getPage),
+     L.map(str => str.split(' ')),
+     C.takeAll(1),
+     each(log));
+}
 
 // function* mapL(f, iter) {
 //   for (const a of iter) {
 //     yield a instanceof Promise ? a.then(f) : f(a);
 //   }
 // }
-
 
 
 go(

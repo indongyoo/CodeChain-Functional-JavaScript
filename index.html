@@ -25,6 +25,25 @@ const a = new Promise(resolve => resolve(new Promise(resolve => resolve(10))));
  - 이터레이터
  - 이터러블/이터레이터/제너레이터 프로토콜
 <script>
+ // const arr = [1, 2, 3];
+ // arr[Symbol.iterator] = null;
+ // for (const a of arr) log(a);
+ // const iter = arr[Symbol.iterator]();
+ // log(iter.next());
+ // log([...iter, ...arr, 10, 20]);
+ // log(iter.next());
+ // log(iter.next());
+ // function* gen() {
+ //   yield 10;
+ //   if (false) yield 20;
+ //   yield 30;
+ // }
+ // const iter = gen();
+ // log([...iter]);
+ // log(iter.next());
+ // log(iter.next());
+ // log(iter.next());
+ // log(iter.next());
 </script>
 
 ## 값에 대해 정리
@@ -36,13 +55,13 @@ const a = new Promise(resolve => resolve(new Promise(resolve => resolve(10))));
  - Symbol a
  - 그 외 사용자 정의 값은 만들지 않는다.
 
-## 함수형 프로그래밍의 목적
- - map, filter, reduce, take 로 명령형 코드를 대신한다.
+## 함수형 프로그래밍
+ - map, filter, reduce, take, range 로 명령형 코드를 대신한다.
  - 값과 함수를 안전하게 합성한다.
- - 효과와 요류를 잘 다룬다.
+ - 효과와 오류를 잘 다룬다.
  - 동시성 로직을 잘 다룬다.
 
-## LISP 스타일 해법의 상징적인 차이
+## LISP 스타일 해법
 
 ### find + Nothing 대신 L.filter, take, each
 <script type="module">
@@ -54,10 +73,18 @@ const users = [
   { name: 'CC', age: 23 }
 ];
 
-go(users,
-  L.filter(u => u.age == 25),
-  take(1),
-  each(log));
+// go(
+//   users,
+//   L.filter(u => u.age > 20),
+//   take(1),
+//   each(log));
+//
+// // log(lazy.next());
+// // log(lazy.next());
+// // log(lazy.next());
+// // log(lazy.next());
+
+// log(users.find(u => u.name == 'DD').age);
 </script>
 
 ### sel
@@ -80,35 +107,7 @@ const datas = {
   ]
 };
 
-go(datas,
-  sel('products.0.name'),
-  a => log(1, a));
-  // 1 "A 반팔티"
-
-go(datas,
-  sel('products.3.name'),
-  a => log(2, a));
-  // 2 "D 반팔티"
-
-go(datas,
-  sel('products.{ "id": 3 }.name'),
-  a => log(3, a));
-  // 3 "C 폰케이스"
-
-go(datas,
-  sel(['products', { "id": 3 }, 'name']),
-  a => log(4, a));
-  // 4 "C 폰케이스"
-
-go(datas,
-  sel('products.#3.name'), // { "id": 3 } 과 동일
-  a => log(5, a));
-  // 5 "C 폰케이스"
-
-go(datas,
-  sel('products.{ "id": 3, "selected": false }.name'),
-  a => log(6, a));
-  // 6 undefined
+// log(sel(['products', {id: 6},'name'], datas));
 </script>
 
 ### compact, reject(a => a === undefined) 활용
@@ -120,40 +119,98 @@ const data = [
   { a: { b: 100 } },
   { a: null },
   { a: { c: 200 } },
+  { a: { b: 50 } },
   { a: { b: null } },
 ];
 
-go(data,
-  map(sel('a.b')),
-  each(log));
+// go(data,
+//  map(sel('a.b')),
+//  each(log));
 
-go(data,
-  map(sel('a.b')),
-  compact,
-  each(log));
-
-go(data,
-  map(sel('a.b')),
-  reject(a => a === undefined),
-  each(log));
+// go(data,
+//  map(sel('a.b')),
+//  compact,
+//  each(log));
+//
+// go(data,
+//  map(sel('a.b')),
+//  reject(a => a === undefined),
+//  each(log));
 </script>
 
 ### try/catch + async/await + Promise
- - 함수를 합성했고 합성된 함수를 실행했다면, 그 함수의 결과는 a, Iterable, Promise 중에 하나인 것이 좋다.
+ - 함수의 결과는 a, Iterable, Promise 중에 하나인 것이 좋다.
  - 특히 비동기적인 상황이 발생된 경우에는 Promise 인 것이 좋다.
 <script type="module">
-</script>
+const { L, countBy, go, take, pipe } = fx;
 
+const pages = [
+ 'javascript html css',
+ 'objective-c ios',
+ 'mysql postgresql aws'];
+
+const getPage = num => Promise.resolve(pages[num]);
+
+const f1 = pipe(getPage, str => str.split(' '));
+
+async function a() {
+  const res = await f1(1);
+  log(res);
+}
+
+// a();
+</script>
 
 ## 다양한 동시성 로직 다루기
 
-### 비동기/동기를 섞어서 합성하기
 ### 순서대로 하기
 ### 순서대로 하다 에러 핸들링 하기
 ### 지연적으로 요청하기
 ### 동시에 요청하기
 ### 동시 요청시 부하 조절하기
 ### 동시 요청 후 먼저 끝나는 것 가져오기
+
+<script>
+const { range, L, go, each, take, C, delay } = fx;
+
+const pages = [
+ 'javascript html css',
+ 'objective-c ios',
+ 'objective-c ios ios'];
+
+const getPage = num => new Promise(resolve =>
+  setTimeout(_ => resolve(pages[num]), 2000));
+
+// async function f1() {
+//    await go(
+//      range(3),
+//      L.map(getPage),
+//      L.map(str => str.split(' ')),
+//      C.takeAll(1),
+//      each(log));
+// }
+
+// function* mapL(f, iter) {
+//   for (const a of iter) {
+//     yield a instanceof Promise ? a.then(f) : f(a);
+//   }
+// }
+
+
+
+go(
+  [100, 300, 200, 600, 50],
+  L.map(time => delay(time, time)),
+  C.takeRace(2),
+  log);
+
+// const iter = mapL(getPage, range(3));
+
+// log(iter);
+// iter.next().value.then(log);
+</script>
+
+
 
 </body>
 </html>
